@@ -249,12 +249,12 @@
 
     <script>
     (function() {
-        // ⚠️ SUBSTITUA com a URL real do seu Worker publicada
+        // ⚠️ SUBSTITUA pela URL real do Worker publicada
         const WORKER_URL = 'https://avz-ip-scanner-api.SEU_USUARIO.workers.dev';
-
         let currentClientKey = null;
         let remainingScans = 0;
 
+        // Traduções completas
         const i18n = {
             pt: {
                 slogan:'Escaneamento de Propriedade Intelectual', tab_title:'Avaliador IP',
@@ -288,8 +288,69 @@
                 rec_critical:'⚠️ Necessário plano de aceleração em várias frentes.',
                 rec_balanced:'✅ IP equilibrado. Continue monitorando e aprimorando.'
             },
-            en: { /* mantido como antes */ },
-            ar: { /* mantido como antes */ }
+            en: {
+                slogan:'Intellectual Property Scanning', tab_title:'IP Evaluator',
+                main_title:'IP Maturity & Innovation Scanner',
+                main_desc:'A deep analysis tool that evaluates six critical dimensions of your intellectual property.',
+                access_title:'Access Code', access_desc:'Enter the code provided by AVZ Infra to use the scanner.',
+                access_btn:'Access Scanner', access_invalid:'Invalid code. Please check and try again.',
+                access_limit:'Scan limit reached. Contact AVZ Infra to renew.',
+                access_expired:'Session expired. Reload the page.',
+                input_title:'Intellectual Asset Identification', label_name:'IP / Project Name',
+                label_category:'Technology Category', label_desc:'Complete Technical Description',
+                desc_hint:'The more details, the more accurate the scan.',
+                label_protection:'Legal Protection Status', label_stage:'Development Stage',
+                scan_btn:'Run Intelligent Scan', reset_btn:'Reset',
+                results_title:'Scan Results', composite_label:'Composite IP Index',
+                rec_title:'Strategic Recommendations', rec_placeholder:'Run the scan to generate recommendations.',
+                export_btn:'Export Report', print_btn:'Print',
+                footer_legal:'© 2026 AVZ Infra. Advanced analysis tool — does not replace professional legal or technical assessment.',
+                dim_maturity:'Technical Maturity', dim_innovation:'Innovation Level',
+                dim_protection:'Legal Protection', dim_market:'Market Potential',
+                dim_clarity:'Document Clarity', dim_team:'Team Strength',
+                alert_fill:'Fill all required fields (Name, Category, and Description).',
+                scanning_msg:'Analyzing...', remaining_scans:' remaining',
+                rec_urgent_protection:'🔒 Urgent: Seek legal protection.',
+                rec_innovation_low:'💡 Incorporate emerging technologies.',
+                rec_clarity_low:'📄 Improve documentation with diagrams.',
+                rec_maturity_low:'🔧 Accelerate development.',
+                rec_market_low:'📊 Conduct detailed market analysis.',
+                rec_team_low:'👥 Strengthen team with domain experts.',
+                rec_excellent:'🌟 Excellent position for investment.',
+                rec_critical:'⚠️ Needs acceleration plan.',
+                rec_balanced:'✅ IP is balanced.'
+            },
+            ar: {
+                slogan:'فحص الملكية الفكرية', tab_title:'مُقيِّم الملكية الفكرية',
+                main_title:'ماسح النضج والابتكار',
+                main_desc:'أداة تحليل عميق تُقيّم ستة أبعاد حاسمة.',
+                access_title:'رمز الوصول', access_desc:'أدخل الرمز المقدم من AVZ Infra لاستخدام الماسح.',
+                access_btn:'دخول', access_invalid:'رمز غير صالح. تحقق وحاول مرة أخرى.',
+                access_limit:'تم الوصول إلى الحد الأقصى. اتصل بـ AVZ Infra للتجديد.',
+                access_expired:'انتهت الجلسة. أعد تحميل الصفحة.',
+                input_title:'تحديد الأصل الفكري', label_name:'اسم الملكية الفكرية',
+                label_category:'الفئة التقنية', label_desc:'الوصف التقني الكامل',
+                desc_hint:'كلما زادت التفاصيل، زادت الدقة.',
+                label_protection:'حالة الحماية', label_stage:'مرحلة التطوير',
+                scan_btn:'تشغيل الفحص', reset_btn:'إعادة تعيين',
+                results_title:'نتائج الفحص', composite_label:'المؤشر المركب',
+                rec_title:'توصيات', rec_placeholder:'قم بالفحص لتوليد التوصيات.',
+                export_btn:'تصدير التقرير', print_btn:'طباعة',
+                footer_legal:'© 2026 AVZ Infra. أداة تحليل متقدم — لا تغني عن التقييم المهني.',
+                dim_maturity:'النضج التقني', dim_innovation:'الابتكار',
+                dim_protection:'الحماية', dim_market:'إمكانات السوق',
+                dim_clarity:'الوضوح', dim_team:'الفريق',
+                alert_fill:'املأ الحقول الإلزامية.', scanning_msg:'جاري التحليل...', remaining_scans:' متبقي',
+                rec_urgent_protection:'🔒 حماية قانونية عاجلة.',
+                rec_innovation_low:'💡 دمج تقنيات ناشئة.',
+                rec_clarity_low:'📄 تحسين التوثيق.',
+                rec_maturity_low:'🔧 تسريع التطوير.',
+                rec_market_low:'📊 تحليل السوق.',
+                rec_team_low:'👥 تعزيز الفريق.',
+                rec_excellent:'🌟 وضع ممتاز للاستثمار.',
+                rec_critical:'⚠️ خطة تسريع مطلوبة.',
+                rec_balanced:'✅ متوازن.'
+            }
         };
 
         const DIMENSIONS = [
@@ -306,13 +367,64 @@
         let aiRecommendations = [];
         let usedAI = false;
 
-        function setLanguage(lang) { /* igual ao anterior */ }
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) el.textContent = i18n[lang][key];
+            });
+            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`.lang-btn[data-lang="${lang}"]`);
+            if (btn) btn.classList.add('active');
+            if (document.getElementById('resultsPanel').classList.contains('active')) {
+                renderMetricsGrid();
+                updateRecommendations();
+            }
+            if (currentClientKey) updateClientBadge();
+        }
 
-        async function validateAccess() { /* chama WORKER_URL/validate */ }
+        document.getElementById('langSwitch').addEventListener('click', e => {
+            const btn = e.target.closest('.lang-btn');
+            if (btn) setLanguage(btn.dataset.lang);
+        });
 
-        function updateClientBadge() { /* ... */ }
+        async function validateAccess() {
+            const key = document.getElementById('accessKeyInput').value.trim();
+            const msg = document.getElementById('accessMsg');
+            const lang = currentLang;
+            if (!key) return;
+            try {
+                const res = await fetch(`${WORKER_URL}/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key })
+                });
+                const data = await res.json();
+                if (!data.valid) {
+                    msg.textContent = data.reason === 'invalid' ? i18n[lang].access_invalid : i18n[lang].access_limit;
+                    return;
+                }
+                currentClientKey = key;
+                remainingScans = data.remaining;
+                document.getElementById('accessCard').style.display = 'none';
+                document.getElementById('inputCard').style.display = 'block';
+                document.getElementById('clientBadge').style.display = 'inline-block';
+                document.getElementById('clientName').textContent = data.name;
+                updateClientBadge();
+                msg.textContent = '';
+            } catch (e) {
+                msg.textContent = i18n[lang].access_invalid;
+            }
+        }
 
-        // Análise com IA agora vai para o Worker (não expõe chave)
+        function updateClientBadge() {
+            if (!currentClientKey) return;
+            document.getElementById('remainingScans').textContent = 
+                `(${remainingScans} ${i18n[currentLang].remaining_scans || 'restantes'})`;
+        }
+
         async function analyzeWithAI(description, category, protection, stage) {
             const res = await fetch(`${WORKER_URL}/analyze`, {
                 method: 'POST',
@@ -323,11 +435,176 @@
             return await res.json();
         }
 
-        // Fallback local (mantido igual)
-        function analyzeLocally(description, category, protection, stage) { /* ... */ }
+        function analyzeLocally(description, category, protection, stage) {
+            const text = description.toLowerCase();
+            const wc = description.split(/\s+/).filter(w => w.length>1).length;
+            const kw = (arr) => arr.reduce((c,k) => c + (text.match(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'))||[]).length, 0);
+            const m=15+kw(['produção','production','escala','scale','maduro','mature','lançado','launched','receita','revenue','cliente'])*4+(wc>80?12:0)+(wc>200?10:0);
+            const i=20+kw(['inovador','innovative','disruptivo','novo','new','patente','patent','algoritmo','ia','ai','machine learning'])*5+(wc>150?8:0);
+            const p=10+kw(['patente','patent','registro','copyright','marca','trademark','segredo'])*6+(protection.includes('patent_granted')?30:protection.includes('patent_pending')?20:protection.includes('copyright')?12:0);
+            const mk=18+kw(['mercado','market','bilhões','milhões','crescimento','growth','oportunidade'])*5+(wc>120?10:0);
+            const c=25+kw(['objetivo','goal','metodologia','arquitetura','fluxo','diagrama','documentação'])*5+(wc>200?15:wc>100?8:0);
+            const t=12+kw(['equipe','team','doutor','phd','engenheiro','especialista','experiência','fundador'])*6+(wc>180?8:0);
+            const stageB={concept:0,prototype:2,mvp:5,beta:8,launched:14,scaling:18};
+            const clamp=v=>Math.min(98,Math.max(2,Math.round(v)));
+            return { scores: {
+                maturity: clamp(m+ (stageB[stage]||0) + (category==='AI/ML'?4:0) + (category==='Biotech'?6:0)),
+                innovation: clamp(i+ (category==='AI/ML'?8:0) + (category==='Blockchain'?6:0)),
+                protection: clamp(p+ (category==='Biotech'?10:0)),
+                market: clamp(mk), clarity: clamp(c), team: clamp(t)
+            }, recommendations: [] };
+        }
 
-        // Restante das funções (renderMetricsGrid, updateCompositeScore, etc.) mantidas como antes
-        // ...
+        function renderMetricsGrid() {
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = '';
+            DIMENSIONS.forEach(dim => {
+                const v = scores[dim.id]||0;
+                const label = i18n[currentLang]?.[dim.i18nKey] || dim.id;
+                const deg = (v/100)*360;
+                const color = v>=70?'#0a3147':v>=40?'#B8860B':'#8B4513';
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `<div class="metric-label"><i class="fas ${dim.icon}" style="color:var(--gold-dark);margin-right:4px;"></i> ${label}</div>
+                    <div class="metric-gauge" style="background: conic-gradient(${color} ${deg}deg, #f0e8e0 0deg);">${v}<span>%</span></div>
+                    <input type="range" class="metric-slider" min="0" max="100" value="${v}" oninput="updateDimension('${dim.id}', this.value)">
+                    <div style="font-size:0.7rem;color:#888;">${v}%</div>`;
+                grid.appendChild(card);
+            });
+        }
+
+        window.updateDimension = (id, val) => {
+            scores[id] = Math.round(Number(val));
+            const gauge = document.querySelector(`.metric-card:has(input[oninput*="${id}"]) .metric-gauge`);
+            if (gauge) {
+                const v = scores[id];
+                const deg = (v/100)*360;
+                const color = v>=70?'#0a3147':v>=40?'#B8860B':'#8B4513';
+                gauge.style.background = `conic-gradient(${color} ${deg}deg, #f0e8e0 0deg)`;
+                gauge.innerHTML = `${v}<span>%</span>`;
+            }
+            updateCompositeScore();
+            updateRecommendations();
+        };
+
+        function updateCompositeScore() {
+            const total = DIMENSIONS.reduce((a,d) => a + (scores[d.id]||0)*d.weight, 0);
+            const comp = Math.round(total);
+            document.getElementById('compositeScoreDisplay').innerHTML = `${comp}<small>%</small>`;
+            document.getElementById('compositeProgressFill').style.width = comp+'%';
+        }
+
+        function updateRecommendations() {
+            const container = document.getElementById('recommendationsContainer');
+            if (aiRecommendations.length) {
+                container.innerHTML = aiRecommendations.map(r => `<div class="recommendation-box">${r}</div>`).join('');
+                return;
+            }
+            const lang = currentLang;
+            const {maturity:m, innovation:i, protection:p, market:mk, clarity:c, team:t} = scores;
+            const comp = Math.round(DIMENSIONS.reduce((a,d) => a + (scores[d.id]||0)*d.weight, 0));
+            const recs = [];
+            if (p<30) recs.push(i18n[lang].rec_urgent_protection);
+            if (i<40) recs.push(i18n[lang].rec_innovation_low);
+            if (c<45) recs.push(i18n[lang].rec_clarity_low);
+            if (m<35) recs.push(i18n[lang].rec_maturity_low);
+            if (mk<40) recs.push(i18n[lang].rec_market_low);
+            if (t<35) recs.push(i18n[lang].rec_team_low);
+            if (comp>=75) recs.push(i18n[lang].rec_excellent);
+            if (comp<35) recs.push(i18n[lang].rec_critical);
+            if (!recs.length) recs.push(i18n[lang].rec_balanced);
+            container.innerHTML = recs.map(r => `<div class="recommendation-box">${r}</div>`).join('');
+        }
+
+        window.runDeepScan = async function() {
+            if (!currentClientKey) {
+                alert(i18n[currentLang].access_expired);
+                return;
+            }
+            const name = document.getElementById('ipName').value.trim();
+            const cat = document.getElementById('ipCategory').value;
+            const desc = document.getElementById('ipDescription').value.trim();
+            const prot = document.getElementById('ipProtection').value;
+            const stage = document.getElementById('ipStage').value;
+            if (!name || !cat || !desc) return alert(i18n[currentLang].alert_fill);
+
+            const btn = document.getElementById('scanBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> ' + (i18n[currentLang].scanning_msg || 'Analisando...');
+
+            let result;
+            usedAI = false;
+            try {
+                result = await analyzeWithAI(desc, cat, prot, stage);
+                usedAI = true;
+            } catch (e) {
+                result = analyzeLocally(desc, cat, prot, stage);
+                usedAI = false;
+            }
+            Object.assign(scores, result.scores);
+            aiRecommendations = result.recommendations || [];
+
+            try {
+                const useRes = await fetch(`${WORKER_URL}/use`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: currentClientKey })
+                });
+                const useData = await useRes.json();
+                if (useData.success) {
+                    remainingScans = useData.remaining;
+                    updateClientBadge();
+                    if (remainingScans === 0) {
+                        setTimeout(() => alert(i18n[currentLang].access_limit), 1500);
+                    }
+                } else {
+                    alert(i18n[currentLang].access_limit);
+                    return;
+                }
+            } catch (e) {
+                console.error('Erro ao registrar uso', e);
+            }
+
+            document.getElementById('aiBadge').style.display = usedAI ? 'inline-block' : 'none';
+            document.getElementById('resultsPanel').classList.add('active');
+            renderMetricsGrid();
+            updateCompositeScore();
+            updateRecommendations();
+            document.getElementById('resultsPanel').scrollIntoView({ behavior:'smooth' });
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-brain"></i> ' + (i18n[currentLang].scan_btn || 'Executar Varredura Inteligente');
+        };
+
+        window.resetAll = function() {
+            ['ipName','ipCategory','ipDescription'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('ipProtection').value = 'none';
+            document.getElementById('ipStage').value = 'concept';
+            DIMENSIONS.forEach(d => scores[d.id] = 0);
+            aiRecommendations = [];
+            usedAI = false;
+            document.getElementById('resultsPanel').classList.remove('active');
+            document.getElementById('aiBadge').style.display = 'none';
+            document.getElementById('compositeScoreDisplay').innerHTML = '--<small>%</small>';
+            document.getElementById('compositeProgressFill').style.width = '0%';
+            document.getElementById('recommendationsContainer').innerHTML = `<p style="color:#888;font-style:italic;">${i18n[currentLang].rec_placeholder}</p>`;
+            window.scrollTo({ top: document.getElementById('inputCard').offsetTop - 100, behavior:'smooth' });
+        };
+
+        window.exportReport = function() {
+            const name = document.getElementById('ipName').value || 'N/A';
+            const comp = document.getElementById('compositeScoreDisplay')?.innerText.replace(/[^0-9]/g,'') || 'N/A';
+            const sep = '='.repeat(50);
+            let r = `AVZ INFRA - IP REPORT\n${sep}\nIP: ${name}\nIndex: ${comp}%\n\n`;
+            DIMENSIONS.forEach(d => { r += `${i18n[currentLang]?.[d.i18nKey]||d.id}: ${scores[d.id]||0}%\n`; });
+            r += `\n${sep}\n${new Date().toLocaleString()}\n`;
+            const blob = new Blob([r],{type:'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `AVZ_IP_${name.slice(0,20)}_${Date.now().toString().slice(-6)}.txt`;
+            a.click();
+        };
+
+        setLanguage('pt');
     })();
     </script>
 </body>
